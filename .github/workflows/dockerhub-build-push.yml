@@ -27,6 +27,7 @@ jobs:
         with:
           repository: hirosystems/stacks-blockchain-api
           excludes: prerelease, draft
+          and_filters: "prerelease: false"
 
       - name: Set up QEMU
         uses: docker/setup-qemu-action@v1
@@ -41,7 +42,7 @@ jobs:
           docker buildx build \
           --platform linux/amd64,linux/arm64 \
           --file .github/workflows/dockerfiles/Dockerfile.hub \
-          --build-arg GIT_TAG=v7.1.1 \
+          --build-arg GIT_TAG=${{ steps.keydb.outputs.tag_name }} \
           --tag ${{ secrets.DOCKERHUB_USERNAME }}/stacks-blockchain-api:${{ steps.keydb.outputs.tag_name }} \
           --tag ${{ secrets.DOCKERHUB_USERNAME }}/stacks-blockchain-api:latest \
           --push .
