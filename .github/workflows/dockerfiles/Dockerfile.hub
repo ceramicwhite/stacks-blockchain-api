@@ -1,27 +1,32 @@
 FROM    --platform=${TARGETPLATFORM} node:16-alpine AS builder
 
-ARG     GIT_TAG
+ARG     GIT_TAG=v7.1.1
 
 WORKDIR /app
 
 RUN     apk add --no-cache --virtual .build-deps git alpine-sdk python3 openjdk8-jre cmake
 
-RUN     git clone --depth 1 https://github.com/hirosystems/stacks-blockchain-api.git --branch $GIT_TAG . && \
-        echo "$GIT_TAG" >> .env && \
-        npm config set unsafe-perm true && \ 
-        npm ci && \
-        npm run build && \
-        npm prune --production
+RUN     git clone -b $GIT_TAG https://github.com/hirosystems/stacks-blockchain-api.git .
+RUN     echo "$GIT_TAG" >> .env
+RUN     npm config set unsafe-perm true
+RUN     npm ci
+RUN     npm run build
+RUN     npm prune --production
 
 
 #################################################################
 FROM    --platform=${TARGETPLATFORM} node:16-alpine AS runner
 
-COPY    --from=builder --chown=1000:1000 /app /app
-COPY    --from=ceramicwhite/bns-script:latest --chmod=+x /app/bns.sh /app/scripts/bns.sh
+COPY    --from=builder /app /app
 
-WORKDIR /app
+COPY    --from=ceramicwhite/bns-script:latest /app/bns.sh /app/scripts/bns.sh
+
+RUN     sed -i 's/home\/node/app/' /etc/passwd && \
+        chown -R 1000:1000 /app && \
+        chmod +x /app/scripts/bns.sh
 
 USER    1000
+
+WORKDIR /app
 
 CMD     ["node", "./lib/index.js"]
