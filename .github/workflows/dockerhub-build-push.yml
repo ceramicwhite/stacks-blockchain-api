@@ -36,15 +36,12 @@ jobs:
         uses: docker/setup-buildx-action@v1
         id: buildx
 
-      - name: Show available Docker buildx platforms
-        run: echo ${{ steps.buildx.outputs.platforms }}
-
       - name: Run Docker buildx for Alpine
         run: |
           docker buildx build \
           --platform linux/amd64,linux/arm64 \
           --file .github/workflows/dockerfiles/Dockerfile.hub \
-          --build-arg GIT_TAG=${{ steps.keydb.outputs.tag_name }} \
+          --build-arg GIT_TAG=v7.1.1 \
           --tag ${{ secrets.DOCKERHUB_USERNAME }}/stacks-blockchain-api:${{ steps.keydb.outputs.tag_name }} \
           --tag ${{ secrets.DOCKERHUB_USERNAME }}/stacks-blockchain-api:latest \
           --push .
